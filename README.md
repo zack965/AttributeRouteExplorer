@@ -1,66 +1,434 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Proof of concept of the PHP attributes and how can they be used 
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
 
-## About Laravel
+### PHP attributes (introduced in PHP 8.0) are a form of metadata that you can add to classes, methods, properties, and functions .
+## Use case description
+### Let's say you want to list all the routes of your application on a web page. There are different ways to do this, but in this repo, I will show you how to do it using PHP attributes.
+## Attributes 
+### First let's create the attributes
+#### ApiDocumentationRoot Attribute is used to set the title and description of the application and it can be defined only in the controller class
+```php
+<?php
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+namespace App\Attributes;
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+use Attribute;
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+#[Attribute(Attribute::TARGET_CLASS)]
+class ApiDocumentationRoot
+{
+    public function __construct(
+        public string $title,
+        public string $description,
+    ) {}
+}
+```
+Let's use it in the controller class
+```php
+<?php
 
-## Learning Laravel
+namespace App\Http\Controllers;
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+use App\Attributes\ApiDocumentationRoot;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Routing\Controller as BaseController;
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+#[ApiDocumentationRoot("api documentation", "To do api documentation")]
+class Controller extends BaseController
+{
+    use AuthorizesRequests, ValidatesRequests;
+}
+```
+#### The GroupRoute attribute is used in each controller to group its actions together into a groupe, defined by a title and description.
+```php
+<?php
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+namespace App\Attributes;
 
-## Laravel Sponsors
+use Attribute;
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+#[Attribute(Attribute::TARGET_CLASS)]
+class GroupRoute
+{
+    public function __construct(
+        public string $groupName,
+        public string $description,
+    ) {}
+}
+```
+#### The Route attribute is used in each controller method to define the route's structure for that method.
+```php
+<?php
 
-### Premium Partners
+namespace App\Attributes;
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+use Attribute;
+use Illuminate\Foundation\Http\FormRequest;
 
-## Contributing
+#[Attribute(Attribute::TARGET_METHOD)]
+class Route
+{
+    public function __construct(
+        private string $method,
+        private string $path,
+        private ?string $description = null,
+        private ?array $parameters = null,
+        private ?array $request = null
+    ) {}
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
 
-## Code of Conduct
+    /**
+     * Get the value of method
+     */
+    public function getMethod()
+    {
+        return $this->method;
+    }
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+    /**
+     * Set the value of method
+     *
+     * @return  self
+     */
+    public function setMethod($method)
+    {
+        $this->method = $method;
 
-## Security Vulnerabilities
+        return $this;
+    }
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+    /**
+     * Get the value of path
+     */
+    public function getPath()
+    {
+        return $this->path;
+    }
 
-## License
+    /**
+     * Set the value of path
+     *
+     * @return  self
+     */
+    public function setPath($path)
+    {
+        $this->path = $path;
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+        return $this;
+    }
+
+    /**
+     * Get the value of description
+     */
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    /**
+     * Set the value of description
+     *
+     * @return  self
+     */
+    public function setDescription($description)
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of parameters
+     */
+    public function getParameters()
+    {
+        return $this->parameters;
+    }
+
+    /**
+     * Set the value of parameters
+     *
+     * @return  self
+     */
+    public function setParameters($parameters)
+    {
+        $this->parameters = $parameters;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of request
+     */
+    public function getRequest()
+    {
+        return $this->request;
+    }
+
+    /**
+     * Set the value of request
+     *
+     * @return  self
+     */
+    public function setRequest($request)
+    {
+        $this->request = $request;
+
+        return $this;
+    }
+}
+
+```
+How to use these attributes in a controller
+```php
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Attributes\GroupRoute;
+use App\Attributes\Route;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\CreateTaskRequest;
+use App\Http\Requests\EditTaskRequest;
+use App\Models\Task;
+use Illuminate\Http\Request;
+
+
+#[GroupRoute("tasks", "group of api to manage tasks actions")]
+class TaskController extends Controller
+{
+    #[Route(description: "list tasks", method: "GET", path: "/tasks")]
+    public function index()
+    {
+        return response()->json(["data" => Task::all()]);
+    }
+    #[Route(description: "Add tasks", method: "POST", path: "/tasks", request: ["description" => "description", "title" => "title"])]
+    public function store(CreateTaskRequest $request)
+    {
+
+        $validatedData = $request->only(["description", "title"]);
+        $task = Task::create($validatedData);
+
+        return response()->json($task, 201);
+    }
+
+    #[Route(description: "Update tasks", method: "PUT", path: "/tasks/{id}", parameters: ["id" => "number"], request: ["description" => "description", "title" => "title"])]
+    public function update(EditTaskRequest $request, string $id)
+    {
+        //
+        $validatedData = $request->only(["description", "title"]);
+
+
+        $task = Task::findOrFail($id);
+        $task->update($validatedData);
+
+        return response()->json($task);
+    }
+
+    #[Route(description: "DELETE tasks", method: "DELETE", path: "/tasks/{id}", parameters: ["id" => "number"])]
+    public function destroy(string $id)
+    {
+        //
+        $task = Task::findOrFail($id);
+        $task->delete();
+
+        return response()->json(null, 204);
+    }
+}
+```
+### Now that we've added the necessary metadata for listing the routes, how can we actually display get this metadata and display it?
+#### Let's define a class service to scan the project for this metadata 
+```php
+<?php
+
+namespace App\Services;
+
+use App\Attributes\ApiDocumentationRoot;
+use App\Attributes\GroupRoute;
+use App\Attributes\Route;
+use App\Helpers\PathHelper;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\File;
+use ReflectionClass;
+use ReflectionMethod;
+
+class AttributesService
+{
+    public static function getApiDocumentationAttributes(): array
+    {
+        // Create a reflection class for the parent Controller class
+        $reflection = new ReflectionClass(Controller::Class);
+        // Get the attributes of the class
+        $attributes = $reflection->getAttributes(ApiDocumentationRoot::class);
+        // Check if the attribute exists
+        if (!empty($attributes)) {
+            // Get the instance of the attribute
+            $apiDocumentationRootInstance = $attributes[0]->newInstance();
+
+            // Access the properties of the attribute
+            $title = $apiDocumentationRootInstance->title;
+            $description = $apiDocumentationRootInstance->description;
+
+            return [
+                'title' => $title,
+                'description' => $description,
+            ];
+        }
+
+        return [
+            'error' => 'No ApiDocumentationRoot attribute found.'
+        ];
+    }
+    public static function getDocumentGroupData(): array
+    {
+        $directory = app_path('Http/Controllers');
+        $namespace = 'App\\Http\\Controllers\\';
+        $results = [];
+
+        // Get all PHP files in the specified directory recursively
+        $files = File::allFiles($directory);
+
+        foreach ($files as $file) {
+            // Convert file path to class name
+            $class = AttributesService::getClassFromFile($file, $namespace);
+
+            if (class_exists($class)) {
+                $reflectionClass = new ReflectionClass($class);
+
+                // Check for GroupRoute attribute
+                $attributes = $reflectionClass->getAttributes(GroupRoute::class);
+
+                $routes = [];
+                foreach ($reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+                    $methodAttributes = $method->getAttributes(Route::class);
+                    foreach ($methodAttributes as $attribute) {
+                        $new_routes = $attribute->newInstance();
+                        $routes[] = [
+                            "path" =>  env("APP_URL") . "/api" . $new_routes->getPath(),
+                            "method" => $new_routes->getMethod(),
+                            "description" => $new_routes->getDescription(),
+                            "parameters" => $new_routes->getParameters(),
+                            "request" => $new_routes->getRequest(),
+                        ];
+                    }
+                }
+
+                if (!empty($attributes)) {
+                    // Instantiate the attribute and retrieve its properties
+                    $groupRouteInstance = $attributes[0]->newInstance();
+                    $results[] = [
+                        'groupName' => $groupRouteInstance->groupName,
+                        'description' => $groupRouteInstance->description,
+                        'routes' => $routes,
+                    ];
+                }
+            }
+        }
+
+        return $results;
+    }
+
+    public static  function getClassFromFile($file, $namespace): string
+    {
+        // Remove base directory and ".php" from file path
+        $relativePath = str_replace([base_path('app/Http/Controllers/'), '/', '.php'], ['', '\\', ''], $file->getRealPath());
+
+        // Combine the namespace with the relative path
+        return $namespace . $relativePath;
+    }
+}
+```
+#### This class scan the controller and the controllers of the project to get this metadata , so let's use it inside our controller
+```php
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Services\AttributesService;
+use Illuminate\Http\Request;
+
+class ApiDocumentationController extends Controller
+{
+    //
+    public function index()
+    {
+        $data = AttributesService::getApiDocumentationAttributes();
+        $groups = AttributesService::getDocumentGroupData();
+        /* return response()->json([
+            "data" => $data,
+            "groups" => $groups,
+        ]); */
+        return view("apiDocs.index")->with("groups", $groups)->with("data", $data);
+    }
+    public function indexJson()
+    {
+        $data = AttributesService::getApiDocumentationAttributes();
+        $groups = AttributesService::getDocumentGroupData();
+        return response()->json([
+            "data" => $data,
+            "groups" => $groups,
+        ]);
+    }
+}
+
+```
+#### In this controller we have the JSON version of the metadata and ui version .
+#### JSON version : 
+```json
+{
+   "data":{
+      "title":"api documentation",
+      "description":"To do api documentation"
+   },
+   "groups":[
+      {
+         "groupName":"tasks",
+         "description":"group of api to manage tasks actions",
+         "routes":[
+            {
+               "path":"http://127.0.0.1:8000/api/tasks",
+               "method":"GET",
+               "description":"list tasks",
+               "parameters":null,
+               "request":null
+            },
+            {
+               "path":"http://127.0.0.1:8000/api/tasks",
+               "method":"POST",
+               "description":"Add tasks",
+               "parameters":null,
+               "request":{
+                  "description":"description",
+                  "title":"title"
+               }
+            },
+            {
+               "path":"http://127.0.0.1:8000/api/tasks/{id}",
+               "method":"PUT",
+               "description":"Update tasks",
+               "parameters":{
+                  "id":"number"
+               },
+               "request":{
+                  "description":"description",
+                  "title":"title"
+               }
+            },
+            {
+               "path":"http://127.0.0.1:8000/api/tasks/{id}",
+               "method":"DELETE",
+               "description":"DELETE tasks",
+               "parameters":{
+                  "id":"number"
+               },
+               "request":null
+            }
+         ]
+      }
+   ]
+}
+```
+#### UI version : 
+![Alt text](public/image.png)
+

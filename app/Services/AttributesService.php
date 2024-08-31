@@ -63,7 +63,7 @@ class AttributesService
                     foreach ($methodAttributes as $attribute) {
                         $new_routes = $attribute->newInstance();
                         $routes[] = [
-                            "path" => PathHelper::getHostApi() . $new_routes->getPath(),
+                            "path" =>  env("APP_URL") . "/api" . $new_routes->getPath(),
                             "method" => $new_routes->getMethod(),
                             "description" => $new_routes->getDescription(),
                             "parameters" => $new_routes->getParameters(),
