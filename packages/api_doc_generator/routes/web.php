@@ -3,5 +3,6 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/appolo', function () {
-    return "dddd";
+
+    return config("api_doc_generator.app_name");
 });
