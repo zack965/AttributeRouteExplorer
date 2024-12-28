@@ -19,5 +19,5 @@ Route::get('/', function () {
 });
 
 
-Route::get("api_docs", [ApiDocumentationController::Class, "index"]);
-Route::get("api_docs_json", [ApiDocumentationController::Class, "indexJson"]);
+Route::get("api_docs", [ApiDocumentationController::class, "index"]);
+Route::get("api_docs_json", [ApiDocumentationController::class, "indexJson"]);
